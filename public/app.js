@@ -447,16 +447,31 @@ const configValue = (config, key) => {
   return v && typeof v === 'object' && 'value' in v ? v.value : v;
 };
 
-// Ultralytics logs one history row per epoch at step = epoch number, so for those runs
-// the step is the epoch. Runs that log an `epoch` metric use that instead.
+// How many times a training loss was logged. Ultralytics logs train/* once per epoch, but
+// after training it also logs a final best.pt validation and plots, each at a new step, so
+// a finished run's last step (50) runs ahead of the epochs actually trained (48).
+function trainedEpochs(historyKeys) {
+  let most = 0;
+  for (const [k, v] of Object.entries(historyKeys?.keys || {})) {
+    if (!k.startsWith('train/')) continue;
+    const n = (v?.typeCounts || []).reduce((sum, t) => sum + (t.type === 'number' ? t.count : 0), 0);
+    if (n > most) most = n;
+  }
+  return most;
+}
+
+// Runs that log an `epoch` metric use it. Ultralytics runs (one history row per epoch) use
+// the training-loss count, falling back to the step when the history keys are not loaded.
 function epochInfo(r) {
   const s = r.summary || {};
   const totalRaw = Number(configValue(r.config, 'epochs'));
   const total = Number.isFinite(totalRaw) && totalRaw > 0 ? totalRaw : null;
   if (typeof s.epoch === 'number') return { epoch: Math.round(s.epoch), total };
   const ultralytics = Object.keys(s).some((k) => /^metrics\/(mAP|precision|recall)/.test(k)) || configValue(r.config, 'imgsz') !== undefined;
-  if (ultralytics && typeof s._step === 'number') return { epoch: s._step, total };
-  return null;
+  if (!ultralytics) return null;
+  const trained = trainedEpochs(r.historyKeys);
+  if (trained) return { epoch: trained, total };
+  return typeof s._step === 'number' ? { epoch: s._step, total } : null;
 }
 
 const fmtMetric = (v) => (typeof v !== 'number' ? '' : Math.abs(v) <= 1 ? v.toFixed(3) : formatValue(v));
@@ -473,7 +488,7 @@ function pickMetric(summary, entity, project) {
 }
 
 function enrichRun(run, entity, project) {
-  return { ...run, entity, project, summary: parseJSON(run.summaryMetrics), config: parseJSON(run.config) };
+  return { ...run, entity, project, summary: parseJSON(run.summaryMetrics), config: parseJSON(run.config), historyKeys: parseJSON(run.historyKeys) };
 }
 
 function runtimeSec(r) {

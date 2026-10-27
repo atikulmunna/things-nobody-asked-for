@@ -301,7 +301,7 @@ export function dashProjectsQuery(entities) {
 export function dashRunsQuery(projects) {
   const parts = projects.map((p, i) => `p${i}: project(name: ${lit(p.name)}, entityName: ${lit(p.entityName)}) {
     name entityName
-    live: runs(filters: $running, first: 15, order: "-created_at") { edges { node { ...RunListFields config } } }
+    live: runs(filters: $running, first: 15, order: "-created_at") { edges { node { ...RunListFields config historyKeys } } }
     recent: runs(first: 10, order: "-created_at") { edges { node { ...RunListFields } } }
   }`);
   return `query DashRuns($running: JSONString) {\n${parts.join('\n')}\n}\n${RUN_LIST_FIELDS}`;
