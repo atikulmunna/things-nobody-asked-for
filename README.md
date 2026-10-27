@@ -1,7 +1,3 @@
-<p align="center"><img src="public/logo.svg" width="72" alt=""></p>
-
-<h1 align="center">watchBoard</h1>
-
 <p align="center">An Android app for monitoring Weights &amp; Biases training runs from your phone.</p>
 
 <p align="center">
