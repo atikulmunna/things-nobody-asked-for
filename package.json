@@ -1,0 +1,24 @@
+{
+  "name": "watchboard",
+  "version": "1.0.0",
+  "description": "An Android app (and optional desktop web app) for checking your Weights & Biases runs, sweeps, artifacts, registry, reports and Weave traces.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node server.js --check",
+    "icons": "node scripts/make-icons.js",
+    "android": "node scripts/build-android.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

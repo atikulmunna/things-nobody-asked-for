@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+.app-secrets.json
+
+# Local notes and planning docs
+CLAUDE.md
+tasks.md
+*srs*
+*SRS*
+*spec*.md
+*plan*.md
+
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties

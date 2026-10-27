@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">watchBoard</string>
+    <string name="title_activity_main">watchBoard</string>
+    <string name="package_name">dev.watchboard.app</string>
+    <string name="custom_url_scheme">dev.watchboard.app</string>
+</resources>

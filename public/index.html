@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>watchBoard</title>
+  <meta name="description" content="Check your Weights &amp; Biases runs, sweeps, artifacts and Weave traces from your phone.">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="watchBoard">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-180.png">
+  <link rel="preload" href="/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div id="boot" class="boot"><p class="muted">Loading watchBoard</p></div>
+
+  <section id="login" class="login" hidden>
+    <form id="login-form" class="login-card" autocomplete="on">
+      <div class="brand">
+        <img class="brand-logo" src="/logo.svg" alt="">
+        watchBoard
+      </div>
+      <div id="login-fields"></div>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button id="login-submit" class="btn primary block" type="submit">Unlock</button>
+    </form>
+  </section>
+
+  <div id="shell" class="shell" hidden>
+    <header class="topbar">
+      <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-controls="drawer" aria-expanded="false"></button>
+      <a id="back-btn" class="icon-btn" href="#/" aria-label="Back" hidden></a>
+      <div class="titles">
+        <span id="crumb" class="crumb" hidden></span>
+        <h1 id="title">watchBoard</h1>
+      </div>
+      <button id="refresh-btn" class="icon-btn" type="button" aria-label="Refresh"></button>
+    </header>
+    <nav id="drawer" class="drawer" aria-label="All tools"></nav>
+    <div id="scrim" class="scrim" hidden></div>
+    <main id="view" class="view"></main>
+    <nav id="tabbar" class="tabbar" aria-label="Quick links"></nav>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
