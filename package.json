@@ -1,6 +1,6 @@
 {
   "name": "watchboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Android app (and optional desktop web app) for checking your Weights & Biases runs, sweeps, artifacts, registry, reports and Weave traces.",
   "private": true,
   "type": "module",

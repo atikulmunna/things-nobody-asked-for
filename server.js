@@ -13,7 +13,7 @@ import * as W from './public/queries.js';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const SECRETS_FILE = path.join(ROOT, '.app-secrets.json');
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 loadDotEnv(path.join(ROOT, '.env'));
 
