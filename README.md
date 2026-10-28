@@ -11,7 +11,7 @@ A read-only Android app for checking your AWS account from your phone: S3 bucket
 
 ## Install
 
-Download `cloudBoard.apk` from the [latest release](https://github.com/atikulmunna/cloudboard/releases/latest), open it on your phone and allow installs from that source. Needs Android 7.0 or newer. Then enter an IAM user's access key ID and secret access key.
+Download `cloudBoard.apk` from the [latest release](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/cloudboard-v1.0.0), open it on your phone and allow installs from that source. Needs Android 7.0 or newer. Then enter an IAM user's access key ID and secret access key.
 
 ## What it shows
 
