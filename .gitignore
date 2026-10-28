@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+
+# Local notes and agent config (never published)
+CLAUDE.md
+tasks.md
+*srs*
+*SRS*
+PLAN*.md
+NOTES*.md
+notes/
+.claude/
+.opencode/

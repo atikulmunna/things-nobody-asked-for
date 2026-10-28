@@ -1,0 +1,17 @@
+{
+  "appId": "dev.cloudboard.app",
+  "appName": "cloudBoard",
+  "webDir": "public",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#000000"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": false
+    },
+    "SystemBars": {
+      "insetsHandling": "css"
+    }
+  }
+}
