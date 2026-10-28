@@ -3,12 +3,10 @@
 A read-only Android app for checking your AWS account from your phone: S3 buckets, SQS queues, and CloudWatch alarms, metrics and logs. AMOLED black with the AWS palette.
 
 <p>
-  <img src="docs/screenshots/home.png" width="32%" alt="Home">
-  <img src="docs/screenshots/s3.png" width="32%" alt="S3 bucket">
-  <img src="docs/screenshots/alarm.png" width="32%" alt="CloudWatch alarm">
-  <img src="docs/screenshots/menu.png" width="32%" alt="Advanced mode menu">
-  <img src="docs/screenshots/queue-light.png" width="32%" alt="SQS queue in the light theme">
-  <img src="docs/screenshots/cloudwatch-light.png" width="32%" alt="CloudWatch alarms in the light theme">
+  <img src="docs/screenshots/home.png" width="24%" alt="Home">
+  <img src="docs/screenshots/s3.png" width="24%" alt="S3 bucket">
+  <img src="docs/screenshots/alarm.png" width="24%" alt="CloudWatch alarm">
+  <img src="docs/screenshots/menu.png" width="24%" alt="Advanced mode menu">
 </p>
 
 ## Install
