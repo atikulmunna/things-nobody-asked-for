@@ -18,7 +18,7 @@
 
 ## Install
 
-Download `watchBoard.apk` from the [latest release](https://github.com/atikulmunna/watchBoard/releases/latest), open it on your phone and allow the install. On first launch, paste your API key from [wandb.ai/authorize](https://wandb.ai/authorize). W&B Dedicated Cloud and self-hosted servers can set their own API host on the same screen.
+Download `watchBoard.apk` from the [latest release](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/watchboard-v1.0.1), open it on your phone and allow the install. On first launch, paste your API key from [wandb.ai/authorize](https://wandb.ai/authorize). W&B Dedicated Cloud and self-hosted servers can set their own API host on the same screen.
 
 Requires Android 7.0 or newer.
 
