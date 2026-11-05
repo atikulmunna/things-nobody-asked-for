@@ -420,18 +420,24 @@ function setScope(entity, project) {
 const pinsKey = (entity, project) => `pins:${entity}/${project}`;
 const getPins = (entity, project) => store.get(pinsKey(entity, project), []);
 
-// Object detection runs (Ultralytics YOLO and RT-DETR log metrics/mAP50(B) and
-// metrics/mAP50-95(B)). Box metrics win over mask metrics for segmentation runs.
+// The two metrics a vision run is judged by, shown as a pair on the Training now card:
+// detection logs metrics/mAP50(B) and metrics/mAP50-95(B) (box metrics win over mask
+// metrics for segmentation), classification logs metrics/accuracy_top1 and _top5.
+// `headline` is the one run lists show.
 const squash = (k) => k.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-function detectionKeys(summary) {
+function taskMetrics(summary) {
   if (!summary) return null;
   const keys = Object.keys(summary).filter((k) => typeof summary[k] === 'number');
   const rank = (k) => (/\(B\)$/.test(k) ? 0 : /\(M\)$/.test(k) ? 2 : 1);
   const pick = (test) => keys.filter((k) => test(squash(k))).sort((a, b) => rank(a) - rank(b) || a.length - b.length)[0];
   const m5095 = pick((n) => n.includes('map5095'));
   const m50 = pick((n) => n.includes('map50') && !n.includes('map5095'));
-  return m50 && m5095 ? { m50, m5095 } : null;
+  if (m50 && m5095) return { keys: [m50, m5095], headline: m5095 };
+  const top1 = pick((n) => n.includes('top1') && !n.includes('loss'));
+  const top5 = pick((n) => n.includes('top5') && !n.includes('loss'));
+  if (top1 && top5) return { keys: [top1, top5], headline: top1 };
+  return null;
 }
 
 function metricLabel(key) {
@@ -439,6 +445,8 @@ function metricLabel(key) {
   const mask = /\(M\)$/.test(key) ? ' mask' : '';
   if (n.includes('map5095')) return `mAP50-95${mask}`;
   if (n.includes('map50')) return `mAP50${mask}`;
+  if (n.includes('top1') && !n.includes('loss')) return 'Top-1 accuracy';
+  if (n.includes('top5') && !n.includes('loss')) return 'Top-5 accuracy';
   return key;
 }
 
@@ -467,7 +475,7 @@ function epochInfo(r) {
   const totalRaw = Number(configValue(r.config, 'epochs'));
   const total = Number.isFinite(totalRaw) && totalRaw > 0 ? totalRaw : null;
   if (typeof s.epoch === 'number') return { epoch: Math.round(s.epoch), total };
-  const ultralytics = Object.keys(s).some((k) => /^metrics\/(mAP|precision|recall)/.test(k)) || configValue(r.config, 'imgsz') !== undefined;
+  const ultralytics = Object.keys(s).some((k) => /^metrics\/(mAP|precision|recall|accuracy_top)/.test(k)) || configValue(r.config, 'imgsz') !== undefined;
   if (!ultralytics) return null;
   const trained = trainedEpochs(r.historyKeys);
   if (trained) return { epoch: trained, total };
@@ -479,8 +487,8 @@ const fmtMetric = (v) => (typeof v !== 'number' ? '' : Math.abs(v) <= 1 ? v.toFi
 function pickMetric(summary, entity, project) {
   if (!summary) return null;
   for (const k of getPins(entity, project)) if (typeof summary[k] === 'number') return k;
-  const det = detectionKeys(summary);
-  if (det) return det.m5095;
+  const task = taskMetrics(summary);
+  if (task) return task.headline;
   const keys = Object.keys(summary).filter((k) => !k.startsWith('_') && typeof summary[k] === 'number' && !k.startsWith('system'));
   const score = (k) => (/(^|\/)loss$/i.test(k) ? 0 : /loss/i.test(k) ? 1 : /acc|reward|score|f1|auc|map|bleu|rouge|perplexity/i.test(k) ? 2 : 3);
   keys.sort((a, b) => score(a) - score(b) || a.length - b.length || a.localeCompare(b));
@@ -542,9 +550,9 @@ function runRow(r, { showProject = false } = {}) {
   </a>`;
 }
 
-// Training now card for detection runs: epoch progress, then mAP50 and mAP50-95 tiles
-// whose change and sparkline are filled in by fillSparklines.
-function detectionCard(r, det) {
+// Training now card for detection and classification runs: epoch progress, then a tile
+// per task metric whose change and sparkline are filled in by fillSparklines.
+function taskCard(r, task) {
   const h = runHealth(r);
   const ep = epochInfo(r);
   const rt = runtimeSec(r);
@@ -561,14 +569,14 @@ function detectionCard(r, det) {
         ${ep ? `<span class="epoch">Epoch ${esc(ep.epoch.toLocaleString())}${ep.total ? ` of ${esc(ep.total.toLocaleString())}` : ''}</span>` : ''}</span>
       <span class="row-meta"><span>${esc(r.project)}</span>${rt ? `<span>${esc(formatSeconds(rt))}</span>` : ''}<span>${icon('pulse', 'ic sm')}${esc(ago(r.heartbeatAt))}</span></span>
       ${pct !== null ? `<span class="progress" role="progressbar" aria-label="Epochs done" aria-valuemin="0" aria-valuemax="${ep.total}" aria-valuenow="${ep.epoch}"><span style="width:${pct.toFixed(1)}%"></span></span>` : ''}
-      <span class="mtiles">${tile(det.m50, 1)}${tile(det.m5095, 2)}</span>
+      <span class="mtiles">${task.keys.map((key, i) => tile(key, i + 1)).join('')}</span>
     </span>
   </a>`;
 }
 
 function liveRow(r) {
-  const det = detectionKeys(r.summary);
-  if (det) return detectionCard(r, det);
+  const task = taskMetrics(r.summary);
+  if (task) return taskCard(r, task);
   const h = runHealth(r);
   const key = pickMetric(r.summary, r.entity, r.project);
   const val = key ? r.summary[key] : undefined;
@@ -1003,9 +1011,9 @@ async function viewDashboard(ctx) {
 function fillSparklines(ctx, runs) {
   const items = runs
     .map((r) => {
-      const det = detectionKeys(r.summary);
-      const keys = det ? [det.m50, det.m5095] : [pickMetric(r.summary, r.entity, r.project)].filter(Boolean);
-      return { id: r.id, entity: r.entity, project: r.project, run: r.name, det: Boolean(det), keys };
+      const task = taskMetrics(r.summary);
+      const keys = task ? task.keys : [pickMetric(r.summary, r.entity, r.project)].filter(Boolean);
+      return { id: r.id, entity: r.entity, project: r.project, run: r.name, card: Boolean(task), keys };
     })
     .filter((it) => it.keys.length);
   if (!items.length) return;
@@ -1016,7 +1024,7 @@ function fillSparklines(ctx, runs) {
       if (ctx.stale()) return;
       items.forEach((it, i) => {
         const rows = d[`r${i}`]?.run?.sampledHistory?.[0] || [];
-        if (!it.det) {
+        if (!it.card) {
           const slot = ctx.root.querySelector(`[data-spark="${CSS.escape(it.id)}"]`);
           if (slot) slot.innerHTML = sparkline(rows.map((o) => [o._step, o[it.keys[0]]]));
           return;
@@ -1027,7 +1035,7 @@ function fillSparklines(ctx, runs) {
           const pts = rows.map((o) => [o._step, o[key]]).filter((p) => Number.isFinite(p[0]) && Number.isFinite(p[1]));
           const slot = card.querySelector(`[data-spark-key="${CSS.escape(key)}"]`);
           if (slot) slot.innerHTML = sparkline(pts, { width: 128, height: 32, color: `var(--series-${k + 1})` });
-          // Change since the previous epoch; higher mAP is better.
+          // Change since the previous epoch; higher mAP and accuracy are better.
           const delta = card.querySelector(`[data-delta="${CSS.escape(key)}"]`);
           if (delta && pts.length >= 2) {
             const diff = pts[pts.length - 1][1] - pts[pts.length - 2][1];

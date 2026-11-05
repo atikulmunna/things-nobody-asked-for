@@ -10,7 +10,7 @@
 ## Features
 
 - Dashboard of live, crashed and recently finished runs across your projects and teams, refreshed every 30 seconds
-- Object detection runs (Ultralytics YOLO, RT-DETR) show the epoch and mAP50 and mAP50-95 with their trend
+- Ultralytics runs show the epoch plus their two key metrics with a trend: mAP50 and mAP50-95 for detection (YOLO, RT-DETR), top-1 and top-5 accuracy for classification
 - Run pages with metric charts, summary and config, GPU/CPU/memory, live console logs, files and artifacts
 - Sweeps, artifacts, registry, reports and Weave traces
 - Stop a run, or pause, resume and stop a sweep, each after a confirmation (can be turned off)
