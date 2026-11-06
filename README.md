@@ -8,3 +8,4 @@ Each tool lives on its own branch with its full history. `main` only holds this 
 |---|---|---|---|
 | **watchBoard** | Watch your Weights & Biases training runs from your phone | [`watchboard`](https://github.com/atikulmunna/things-nobody-asked-for/tree/watchboard) | [1.0.2](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/watchboard-v1.0.2) |
 | **cloudBoard** | Check on your AWS account from your phone, strictly read-only | [`cloudboard`](https://github.com/atikulmunna/things-nobody-asked-for/tree/cloudboard) | [1.0.0](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/cloudboard-v1.0.0) |
+| **gpuBoard** | Run your cluster GPU job and RunPod pods from your phone, over SSH | [`gpuboard`](https://github.com/atikulmunna/things-nobody-asked-for/tree/gpuboard) | [1.0.0](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/gpuboard-v1.0.0) |
