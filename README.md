@@ -17,7 +17,7 @@
 
 ## Install
 
-Download `GlassNotch-1.2.dmg` from the [latest release](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/glassnotch-v1.2), open it and drag GlassNotch into Applications.
+Download `GlassNotch-1.3.dmg` from the [latest release](https://github.com/atikulmunna/things-nobody-asked-for/releases/tag/glassnotch-v1.3), open it and drag GlassNotch into Applications.
 
 The app isn't notarized by Apple, so macOS blocks it the first time you open it: click Done, then open System Settings › Privacy & Security and click **Open Anyway** next to GlassNotch. You only need to do this once.
 
