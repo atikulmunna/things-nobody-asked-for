@@ -44,6 +44,10 @@ npm run android -- --install    # debug build, installed on a phone over USB
 
 A build from source is signed with your own key, so uninstall the release app before installing it.
 
+### Release signing
+
+Published releases are signed with the watchBoard release key: `~/.watchboard/release.keystore`, alias `watchboard`, with its password in the macOS Keychain item `watchboard-release-keystore`. On another machine, set `WATCHBOARD_KEYSTORE` and `WATCHBOARD_KEYSTORE_PASSWORD` instead. `npm run android -- --release` picks the key up and checks the APK's certificate afterwards. Without the keystore it signs with your debug key and warns that the APK can't update the published app. Keep a backup of the keystore and its password: a release signed with any other key forces everyone to uninstall first.
+
 ## Browser version
 
 `server.js` serves the same interface to browsers on your network and keeps the API key on the computer. Devices unlock it with a passcode printed at startup.

@@ -16,13 +16,25 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release builds use the watchBoard release key when scripts/build-android.js passes it in
+    // (README, "Release signing"). Without it they fall back to this computer's debug key,
+    // which can't update installs of the published app.
+    def releaseStore = System.getenv('WATCHBOARD_KEYSTORE')
+    signingConfigs {
+        if (releaseStore) {
+            release {
+                storeFile file(releaseStore)
+                storePassword System.getenv('WATCHBOARD_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('WATCHBOARD_KEY_ALIAS') ?: 'watchboard'
+                keyPassword System.getenv('WATCHBOARD_KEY_PASSWORD') ?: System.getenv('WATCHBOARD_KEYSTORE_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            // Signed with the local debug key so sideloaded builds update in place.
-            // Use your own keystore if you publish to an app store.
-            signingConfig signingConfigs.debug
+            signingConfig releaseStore ? signingConfigs.release : signingConfigs.debug
         }
     }
 }

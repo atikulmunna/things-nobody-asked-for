@@ -1,6 +1,6 @@
 // Builds the Android app: refreshes the bundled web files, runs Gradle, and copies the APK to dist/.
 // Usage: npm run android              (debug APK, WebView debugging on)
-//        npm run android -- --release  (release APK for sharing, WebView debugging off)
+//        npm run android -- --release  (release APK for sharing: WebView debugging off, release key)
 //        npm run android -- --install  (also installs on a phone connected over USB)
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -39,6 +39,39 @@ function findSdk() {
   return fs.existsSync(p) ? p : null;
 }
 
+// The certificate published watchBoard releases are signed with (1.0.3 onwards).
+const RELEASE_CERT_SHA256 = 'e24a5e6229b5ae6b82ad11f34654a3e16f93c0ed1d9c5d881b25a667d2c7f0bc';
+
+// The release keystore and its password: WATCHBOARD_KEYSTORE and WATCHBOARD_KEYSTORE_PASSWORD,
+// or ~/.watchboard/release.keystore with its password in the macOS Keychain.
+function releaseSigning() {
+  const store = process.env.WATCHBOARD_KEYSTORE || path.join(os.homedir(), '.watchboard', 'release.keystore');
+  if (!fs.existsSync(store)) {
+    if (!process.env.WATCHBOARD_KEYSTORE) return null;
+    console.error(`WATCHBOARD_KEYSTORE is set to ${store}, which does not exist.`);
+    process.exit(1);
+  }
+  let password = process.env.WATCHBOARD_KEYSTORE_PASSWORD;
+  if (!password && process.platform === 'darwin') {
+    const res = spawnSync('security', ['find-generic-password', '-s', 'watchboard-release-keystore', '-w'], { encoding: 'utf8' });
+    if (res.status === 0) password = res.stdout.trim();
+  }
+  if (!password) {
+    console.error(`Found ${store} but not its password. Set WATCHBOARD_KEYSTORE_PASSWORD, or on a Mac add it to the Keychain as watchboard-release-keystore.`);
+    process.exit(1);
+  }
+  return { WATCHBOARD_KEYSTORE: store, WATCHBOARD_KEYSTORE_PASSWORD: password };
+}
+
+function signerSha256(apk, env) {
+  const tools = sdk && path.join(sdk, 'build-tools');
+  if (!tools || !fs.existsSync(tools)) return null;
+  const latest = fs.readdirSync(tools).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).pop();
+  const apksigner = path.join(tools, latest, isWin ? 'apksigner.bat' : 'apksigner');
+  const res = spawnSync(apksigner, ['verify', '--print-certs', apk], { encoding: 'utf8', env, shell: isWin });
+  return /certificate SHA-256 digest: ([0-9a-f]+)/.exec(res.stdout || '')?.[1] || null;
+}
+
 const javaHome = findJavaHome();
 const sdk = findSdk();
 if (!javaHome) console.warn('JAVA_HOME is not set and Android Studio was not found. Gradle may fail.');
@@ -52,8 +85,16 @@ fs.writeFileSync(path.join(ROOT, 'public', 'vendor', 'capacitor.js'), core.repla
 run('npx', ['cap', 'sync', 'android'], { cwd: ROOT });
 
 const env = { ...process.env };
-if (javaHome) env.JAVA_HOME = javaHome;
+if (javaHome) {
+  env.JAVA_HOME = javaHome;
+  env.PATH = `${path.join(javaHome, 'bin')}${path.delimiter}${env.PATH || ''}`;
+}
 if (sdk) env.ANDROID_HOME = sdk;
+if (release) {
+  const signing = releaseSigning();
+  if (signing) Object.assign(env, signing);
+  else console.warn('\nNo release keystore found, so this release build is signed with your debug key.');
+}
 const androidDir = path.join(ROOT, 'android');
 const gradlew = path.join(androidDir, isWin ? 'gradlew.bat' : 'gradlew');
 const variant = release ? 'release' : 'debug';
@@ -64,6 +105,11 @@ fs.mkdirSync(path.join(ROOT, 'dist'), { recursive: true });
 const out = path.join(ROOT, 'dist', release ? 'watchBoard.apk' : 'watchBoard-debug.apk');
 fs.copyFileSync(apk, out);
 console.log(`\nAPK ready: ${out}`);
+if (release) {
+  const cert = signerSha256(out, env);
+  if (cert === RELEASE_CERT_SHA256) console.log('Signed with the watchBoard release key.');
+  else console.warn(`\nWARNING: not signed with the watchBoard release key${cert ? ` (certificate ${cert})` : ''}, so it can't update installs of the published app.`);
+}
 
 if (install) {
   const adb = sdk ? path.join(sdk, 'platform-tools', isWin ? 'adb.exe' : 'adb') : 'adb';
