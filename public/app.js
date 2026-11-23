@@ -455,31 +455,33 @@ const configValue = (config, key) => {
   return v && typeof v === 'object' && 'value' in v ? v.value : v;
 };
 
-// How many times a training loss was logged. Ultralytics logs train/* once per epoch, but
-// after training it also logs a final best.pt validation and plots, each at a new step, so
-// a finished run's last step (50) runs ahead of the epochs actually trained (48).
-function trainedEpochs(historyKeys) {
-  let most = 0;
-  for (const [k, v] of Object.entries(historyKeys?.keys || {})) {
-    if (!k.startsWith('train/')) continue;
-    const n = (v?.typeCounts || []).reduce((sum, t) => sum + (t.type === 'number' ? t.count : 0), 0);
-    if (n > most) most = n;
-  }
-  return most;
+const isUltralytics = (r) => Object.keys(r.summary || {}).some((k) => /^metrics\/(mAP|precision|recall|accuracy_top)/.test(k)) || configValue(r.config, 'imgsz') !== undefined;
+
+// Ultralytics logs each epoch at step = epoch number. Once training ends it logs a final
+// best.pt validation and plots at two more steps, so a finished run's step runs 2 past the
+// epochs trained (50 vs 48). fetchRun looks up the last step with a training loss for those
+// runs. The typeCounts in historyKeys can't be used to count epochs: W&B reports 2 for every key.
+const needsTrainedEpochs = (r) => String(r.state || '').toLowerCase() === 'finished' && typeof r.summary?.epoch !== 'number' && isUltralytics(r);
+
+async function lastTrainStep(r) {
+  const key = Object.keys(r.historyKeys?.keys || {}).filter((k) => k.startsWith('train/')).sort()[0];
+  if (!key) return null;
+  const d = await gql(Q.sampledHistory, { entity: r.entity, project: r.project, name: r.name, specs: [JSON.stringify({ keys: ['_step', key], samples: 1000 })] });
+  const steps = (d.project?.run?.sampledHistory?.[0] || []).filter((o) => typeof o[key] === 'number').map((o) => o._step);
+  return steps.length ? Math.max(...steps) : null;
 }
 
-// Runs that log an `epoch` metric use it. Ultralytics runs (one history row per epoch) use
-// the training-loss count, falling back to the step when the history keys are not loaded.
+// Runs that log an `epoch` metric use it. Ultralytics runs use the step (see above), capped at
+// the configured total.
 function epochInfo(r) {
   const s = r.summary || {};
   const totalRaw = Number(configValue(r.config, 'epochs'));
   const total = Number.isFinite(totalRaw) && totalRaw > 0 ? totalRaw : null;
   if (typeof s.epoch === 'number') return { epoch: Math.round(s.epoch), total };
-  const ultralytics = Object.keys(s).some((k) => /^metrics\/(mAP|precision|recall|accuracy_top)/.test(k)) || configValue(r.config, 'imgsz') !== undefined;
-  if (!ultralytics) return null;
-  const trained = trainedEpochs(r.historyKeys);
-  if (trained) return { epoch: trained, total };
-  return typeof s._step === 'number' ? { epoch: s._step, total } : null;
+  if (!isUltralytics(r)) return null;
+  const step = typeof r.lastTrainStep === 'number' ? r.lastTrainStep : s._step;
+  if (typeof step !== 'number') return null;
+  return { epoch: total ? Math.min(step, total) : step, total };
 }
 
 const fmtMetric = (v) => (typeof v !== 'number' ? '' : Math.abs(v) <= 1 ? v.toFixed(3) : formatValue(v));
@@ -496,7 +498,7 @@ function pickMetric(summary, entity, project) {
 }
 
 function enrichRun(run, entity, project) {
-  return { ...run, entity, project, summary: parseJSON(run.summaryMetrics), config: parseJSON(run.config), historyKeys: parseJSON(run.historyKeys) };
+  return { ...run, entity, project, summary: parseJSON(run.summaryMetrics), config: parseJSON(run.config) };
 }
 
 function runtimeSec(r) {
@@ -1253,6 +1255,13 @@ async function fetchRun(entity, project, name, fresh = false) {
   const run = d.project?.run;
   if (!run) throw new ApiError(`Run ${name} was not found in ${entity}/${project}.`, 'not_found');
   const r = { ...enrichRun(run, entity, project), config: parseJSON(run.config), historyKeys: parseJSON(run.historyKeys) };
+  if (needsTrainedEpochs(r)) {
+    try {
+      r.lastTrainStep = await lastTrainStep(r);
+    } catch (err) {
+      console.warn('Epoch count failed; showing the step', err);
+    }
+  }
   runCache.set(key, { at: Date.now(), run: r });
   return r;
 }
