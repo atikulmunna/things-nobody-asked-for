@@ -5,7 +5,7 @@ import {
 } from './queries.js';
 import { lineChart, sparkline, formatValue, formatSeconds, SERIES_SLOTS } from './charts.js';
 
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 
 // ---------------------------------------------------------------------------
 // Helpers
