@@ -34,7 +34,7 @@ The interface is plain HTML, CSS and JavaScript in `public/`, packaged as an And
 
 ## Build from source
 
-Requires Node.js 18 or newer and Android Studio.
+Requires Node.js 18 or newer and Android Studio, or on a Mac without Android Studio, the Android SDK plus `brew install openjdk@21`.
 
 ```
 npm install

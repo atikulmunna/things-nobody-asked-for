@@ -22,12 +22,14 @@ function run(cmd, args, opts = {}) {
   }
 }
 
-// Gradle needs JDK 21. Android Studio ships one, so use it when JAVA_HOME is not set.
+// Gradle needs JDK 21. When JAVA_HOME is not set, use the one Android Studio ships, or
+// Homebrew's openjdk@21 (keg-only, so macOS's java_home does not find it).
 function findJavaHome() {
   if (process.env.JAVA_HOME) return process.env.JAVA_HOME;
+  const brewJdk = (prefix) => path.join(prefix, 'opt', 'openjdk@21', 'libexec', 'openjdk.jdk', 'Contents', 'Home');
   const candidates = isWin
     ? ['C:\\Program Files\\Android\\Android Studio\\jbr']
-    : ['/Applications/Android Studio.app/Contents/jbr/Contents/Home', '/opt/android-studio/jbr', path.join(os.homedir(), 'android-studio', 'jbr')];
+    : ['/Applications/Android Studio.app/Contents/jbr/Contents/Home', brewJdk('/opt/homebrew'), brewJdk('/usr/local'), '/opt/android-studio/jbr', path.join(os.homedir(), 'android-studio', 'jbr')];
   return candidates.find((p) => fs.existsSync(p));
 }
 
