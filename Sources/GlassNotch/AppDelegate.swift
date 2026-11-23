@@ -4,6 +4,7 @@ import ServiceManagement
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var controller: NotchController?
+    private var widget: DesktopWidgetController?
     private var statusItem: NSStatusItem?
     private let welcome = WelcomeWindowController()
     private let prefs = Prefs.shared
@@ -24,6 +25,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let controller = NotchController()
         controller.start()
         self.controller = controller
+        let widget = DesktopWidgetController()
+        widget.start()
+        self.widget = widget
         setUpStatusItem()
         welcome.onFinish = { [weak controller] in controller?.showHello() }
         if !WelcomeWindowController.hasBeenShown { welcome.show() }
@@ -31,6 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         controller?.stop()
+        widget?.stop()
+    }
+
+    /// Opening GlassNotch again (Spotlight, Launchpad, Finder) while it runs brings back the stats
+    /// widget, for anyone who hid it and can't spot the menu bar icon.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        prefs.showStatsWidget = true
+        return false
     }
 
     // MARK: - Menu bar item
@@ -94,6 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(toggle("Show Agents in Notch", prefs.showAgentActivity, #selector(toggleAgents)))
         menu.addItem(toggle("Show Calls in Notch", prefs.showCallActivity, #selector(toggleCalls)))
         menu.addItem(toggle("Haptic Feedback", prefs.haptics, #selector(toggleHaptics)))
+        menu.addItem(toggle("Stats Widget on Desktop", prefs.showStatsWidget, #selector(toggleStatsWidget)))
 
         let delayItem = NSMenuItem(title: "Open Delay", action: nil, keyEquivalent: "")
         let delayMenu = NSMenu()
@@ -149,6 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleMusic() { prefs.showMusicActivity.toggle() }
     @objc private func toggleAgents() { prefs.showAgentActivity.toggle() }
     @objc private func toggleCalls() { prefs.showCallActivity.toggle() }
+    @objc private func toggleStatsWidget() { prefs.showStatsWidget.toggle() }
 
     @objc private func showWelcome() { welcome.show() }
 

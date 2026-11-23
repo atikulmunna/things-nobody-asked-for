@@ -36,6 +36,7 @@ final class Prefs: ObservableObject {
         static let calls = "showCallActivity"
         static let haptics = "haptics"
         static let hoverDelay = "hoverDelay"
+        static let statsWidget = "showStatsWidget"
     }
 
     @Published var glassStyle: GlassStyle { didSet { defaults.set(glassStyle.rawValue, forKey: Key.glassStyle) } }
@@ -49,6 +50,10 @@ final class Prefs: ObservableObject {
     @Published var haptics: Bool { didSet { defaults.set(haptics, forKey: Key.haptics) } }
     /// Seconds the pointer has to rest on the notch before it opens.
     @Published var hoverDelay: Double { didSet { defaults.set(hoverDelay, forKey: Key.hoverDelay) } }
+    /// The system gauges (temperatures, memory, disk) on the desktop.
+    @Published var showStatsWidget: Bool {
+        didSet { defaults.set(showStatsWidget, forKey: Key.statsWidget) }
+    }
 
     private init() {
         defaults.register(defaults: [
@@ -61,6 +66,7 @@ final class Prefs: ObservableObject {
             Key.calls: true,
             Key.haptics: true,
             Key.hoverDelay: 0.12,
+            Key.statsWidget: true,
         ])
         glassStyle = GlassStyle(rawValue: defaults.string(forKey: Key.glassStyle) ?? "") ?? .waterdrop
         frost = defaults.double(forKey: Key.frost)
@@ -71,5 +77,6 @@ final class Prefs: ObservableObject {
         showCallActivity = defaults.bool(forKey: Key.calls)
         haptics = defaults.bool(forKey: Key.haptics)
         hoverDelay = defaults.double(forKey: Key.hoverDelay)
+        showStatsWidget = defaults.bool(forKey: Key.statsWidget)
     }
 }
