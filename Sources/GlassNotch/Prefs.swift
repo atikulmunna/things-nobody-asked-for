@@ -37,6 +37,7 @@ final class Prefs: ObservableObject {
         static let haptics = "haptics"
         static let hoverDelay = "hoverDelay"
         static let statsWidget = "showStatsWidget"
+        static let keepIconsClear = "keepDesktopIconsClear"
     }
 
     @Published var glassStyle: GlassStyle { didSet { defaults.set(glassStyle.rawValue, forKey: Key.glassStyle) } }
@@ -54,6 +55,10 @@ final class Prefs: ObservableObject {
     @Published var showStatsWidget: Bool {
         didSet { defaults.set(showStatsWidget, forKey: Key.statsWidget) }
     }
+    /// Move desktop icons that end up under the stats widget to free spots.
+    @Published var keepIconsClear: Bool {
+        didSet { defaults.set(keepIconsClear, forKey: Key.keepIconsClear) }
+    }
 
     private init() {
         defaults.register(defaults: [
@@ -67,6 +72,7 @@ final class Prefs: ObservableObject {
             Key.haptics: true,
             Key.hoverDelay: 0.12,
             Key.statsWidget: true,
+            Key.keepIconsClear: true,
         ])
         glassStyle = GlassStyle(rawValue: defaults.string(forKey: Key.glassStyle) ?? "") ?? .waterdrop
         frost = defaults.double(forKey: Key.frost)
@@ -78,5 +84,6 @@ final class Prefs: ObservableObject {
         haptics = defaults.bool(forKey: Key.haptics)
         hoverDelay = defaults.double(forKey: Key.hoverDelay)
         showStatsWidget = defaults.bool(forKey: Key.statsWidget)
+        keepIconsClear = defaults.bool(forKey: Key.keepIconsClear)
     }
 }

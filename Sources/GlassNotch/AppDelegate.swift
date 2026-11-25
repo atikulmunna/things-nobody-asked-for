@@ -1,10 +1,13 @@
 import AppKit
+import Combine
 import ServiceManagement
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var controller: NotchController?
     private var widget: DesktopWidgetController?
+    private let iconGuard = DesktopIconGuard()
+    private var bag = Set<AnyCancellable>()
     private var statusItem: NSStatusItem?
     private let welcome = WelcomeWindowController()
     private let prefs = Prefs.shared
@@ -26,8 +29,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         controller.start()
         self.controller = controller
         let widget = DesktopWidgetController()
+        iconGuard.widgetFrame = { [weak widget] in widget?.contentFrame }
+        widget.onPlaced = { [weak self] in self?.iconGuard.scheduleCheck() }
         widget.start()
         self.widget = widget
+        prefs.$showStatsWidget.combineLatest(prefs.$keepIconsClear)
+            .map { $0 && $1 }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] on in on ? self?.iconGuard.start() : self?.iconGuard.stop() }
+            .store(in: &bag)
         setUpStatusItem()
         welcome.onFinish = { [weak controller] in controller?.showHello() }
         if !WelcomeWindowController.hasBeenShown { welcome.show() }
@@ -107,6 +118,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(toggle("Show Calls in Notch", prefs.showCallActivity, #selector(toggleCalls)))
         menu.addItem(toggle("Haptic Feedback", prefs.haptics, #selector(toggleHaptics)))
         menu.addItem(toggle("Stats Widget on Desktop", prefs.showStatsWidget, #selector(toggleStatsWidget)))
+        let iconsItem = toggle("Move Desktop Icons Out of Its Way", prefs.keepIconsClear, #selector(toggleKeepIconsClear))
+        iconsItem.indentationLevel = 1
+        if !prefs.showStatsWidget { iconsItem.action = nil }
+        menu.addItem(iconsItem)
 
         let delayItem = NSMenuItem(title: "Open Delay", action: nil, keyEquivalent: "")
         let delayMenu = NSMenu()
@@ -163,6 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleAgents() { prefs.showAgentActivity.toggle() }
     @objc private func toggleCalls() { prefs.showCallActivity.toggle() }
     @objc private func toggleStatsWidget() { prefs.showStatsWidget.toggle() }
+    @objc private func toggleKeepIconsClear() { prefs.keepIconsClear.toggle() }
 
     @objc private func showWelcome() { welcome.show() }
 

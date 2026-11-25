@@ -44,7 +44,8 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
   # Distribution signature: nested code first, hardened runtime, secure timestamp.
   codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" \
     "$APP/Contents/Frameworks/MediaRemoteAdapter.framework"
-  codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
+  codesign --force --options runtime --timestamp --entitlements Resources/GlassNotch.entitlements \
+    --sign "$SIGN_IDENTITY" "$APP"
 else
   # Ad-hoc signature (runs locally; other Macs need "Open Anyway" once). The designated
   # requirement names the bundle ID instead of the binary's hash, so privacy permissions

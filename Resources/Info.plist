@@ -26,6 +26,8 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>GlassNotch asks Finder to move desktop icons out from under the stats widget.</string>
 	<key>NSDesktopFolderUsageDescription</key>
 	<string>GlassNotch shows your recent screenshots, which macOS saves to the Desktop.</string>
 	<key>NSHighResolutionCapable</key>

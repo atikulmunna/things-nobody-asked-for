@@ -12,7 +12,7 @@
 - **Clipboard**: recent text, images and files as a scrolling list of glass cards. Click one to copy it again.
 - **Claude Code**: what each session is doing (thinking, editing, running, reading, searching), its steps and files edited, a little pixel character in the notch while it works and a checkmark when it's done, plus your 5-hour and weekly usage limits.
 - **Screenshots**: your latest screenshots to open, copy, drag into any app or move to the Trash, plus Capture Area and Capture Text (the text in an area is recognized on the Mac and copied).
-- **Stats widget** floating on the desktop, under your windows on every Space: CPU and GPU temperature as glass rings, memory and disk space as glass tablets that warm from green to red as they fill up. It uses the notch's glass (Waterdrop by default), and the Glass menu changes both. Drag it anywhere; turn it off in the menu or by right-clicking it, and open GlassNotch again (Spotlight, Launchpad) to bring it back.
+- **Stats widget** floating on the desktop, under your windows on every Space: CPU and GPU temperature as glass rings, memory and disk space as glass tablets that warm from green to red as they fill up. It uses the notch's glass (Waterdrop by default), and the Glass menu changes both. Drag it anywhere; turn it off in the menu or by right-clicking it, and open GlassNotch again (Spotlight, Launchpad) to bring it back. Desktop icons that land under it (a new file, or the widget dragged over them) are moved to the next free spot, like macOS does for its own widgets; macOS asks once to let GlassNotch control Finder, and the menu can turn this off.
 - Hides its live activities in fullscreen and brings them back when the pointer moves toward the notch.
 
 ## Install
@@ -40,7 +40,7 @@ Requires macOS 14 Sonoma or newer (call detection needs 14.2). The Liquid Glass 
 - Calls: Core Audio reports which app is using the microphone. Mute mutes the Mac's microphone itself, so it works in every app (the app's own mute button doesn't change), and it's undone when the call ends. End presses the app's own End, Leave or Hang up button through Accessibility and never presses "End for all"; if it finds none, it brings the app forward.
 - Claude Code activity is read from the session transcripts in `~/.claude*/projects`.
 - Fullscreen is detected from the type of the current Space (SkyLight, private).
-- Temperatures are read from the SMC (the `AppleSMC` user client, as macmon and Stats do), averaging the CPU and GPU die sensors. Memory Used is app memory + wired + compressed, as in Activity Monitor; used disk space is the total minus Finder's Available. None of it needs a permission or an admin password. The widget is a window just above the desktop icons rather than a WidgetKit widget, because sandboxed widgets can't read the SMC.
+- Temperatures are read from the SMC (the `AppleSMC` user client, as macmon and Stats do), averaging the CPU and GPU die sensors. Memory Used is app memory + wired + compressed, as in Activity Monitor; used disk space is the total minus Finder's Available. None of it needs a permission or an admin password. The widget is a window just above the desktop icons rather than a WidgetKit widget, because sandboxed widgets can't read the SMC. Finder can't reserve space for such a window, so GlassNotch moves icons out of its way with AppleScript (`desktop position`), only when an icon is under the widget, and not when the desktop is sorted or in stacks.
 
 ## Build from source
 

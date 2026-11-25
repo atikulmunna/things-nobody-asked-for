@@ -13,6 +13,14 @@ final class DesktopWidgetController: NSObject {
     private let prefs = Prefs.shared
     let stats = SystemStatsService()
     private var panel: DesktopWidgetPanel?
+    /// Called when the widget is dragged or shown, so desktop icons can be moved out of its way.
+    var onPlaced: (() -> Void)?
+
+    /// The rings and tablets on screen (without the clear margin around them), or nil when hidden.
+    var contentFrame: CGRect? {
+        guard let panel, panel.isVisible else { return nil }
+        return panel.frame.insetBy(dx: StatsWidgetView.margin, dy: StatsWidgetView.margin)
+    }
     private var bag = Set<AnyCancellable>()
     private var observers: [NSObjectProtocol] = []
 
@@ -41,6 +49,7 @@ final class DesktopWidgetController: NSObject {
         self.panel = panel
         stats.start()
         panel.orderFrontRegardless()
+        onPlaced?()
     }
 
     private func hide() {
@@ -69,11 +78,12 @@ final class DesktopWidgetController: NSObject {
 
         panel.setFrameTopLeftPoint(savedTopLeft(for: size) ?? defaultTopLeft())
         observers.append(NotificationCenter.default.addObserver(
-            forName: NSWindow.didMoveNotification, object: panel, queue: .main) { [weak panel] _ in
+            forName: NSWindow.didMoveNotification, object: panel, queue: .main) { [weak self, weak panel] _ in
             MainActor.assumeIsolated {
                 guard let frame = panel?.frame else { return }
                 UserDefaults.standard.set(NSStringFromPoint(CGPoint(x: frame.minX, y: frame.maxY)),
                                           forKey: DesktopWidgetController.positionKey)
+                self?.onPlaced?()
             }
         })
         return panel
